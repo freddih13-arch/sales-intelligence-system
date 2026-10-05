@@ -104,12 +104,11 @@ flowchart TD
     SCORE --> DIV
     DIV --> TOP
 
-    %% Estilos
+    %% Estilos simplificados
     classDef raw fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef phase fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
     classDef data fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
     classDef exec fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    classDef spec fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5
 
     class RAW1,RAW2 raw
     class ING1,ING2,ING3 phase
@@ -119,10 +118,8 @@ flowchart TD
     class EXCL1,EXCL2,EXCL3 phase
     class SCORE1,SCORE2,SCORE3,SCORE4 phase
     class DIV1,DIV1b,DIV2,DIV3,DIV4 phase
-    class TOP exec
-    class MINERIA spec
 
----
+```
 
 ## 🔑 Diferenciadores clave
 
