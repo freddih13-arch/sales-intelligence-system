@@ -15,12 +15,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import (
+from sales_intel.enriquecimiento_legal.capa_enriquecimiento_legal import (
     clasificar_match,
     normalizar_nit_para_consulta,
     preparar_registro_enriquecido,
 )
-from bold_intel.enriquecimiento_legal.cliente_confecamaras import (
+from sales_intel.enriquecimiento_legal.cliente_confecamaras import (
     ClienteConfecamarasSocrata,
     EventoIntento,
     PoliticaResiliencia,

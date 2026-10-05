@@ -20,17 +20,17 @@ sys.path.insert(0, str(RAIZ_04_SISTEMA))
 
 import pandas as pd
 
-from bold_intel.diversificacion.capa_diversificacion import (
+from sales_intel.diversificacion.capa_diversificacion import (
     ConfiguracionDiversificacion,
     PISO_SCORE_ABSOLUTO,
     PISO_SCORE_RELATIVO,
     bucket_sector,
     clave_desempate_hash,
 )
-from bold_intel.diversificacion import ejecutar_diversificacion as ed_mod
-from bold_intel.diversificacion.ejecutar_diversificacion import ejecutar_diversificacion
-from bold_intel.scoring.variables_scoring import obtener_pesos
-from bold_intel.utils.config import SCORING_DIR, TOP_PROSPECTOS_DIR
+from sales_intel.diversificacion import ejecutar_diversificacion as ed_mod
+from sales_intel.diversificacion.ejecutar_diversificacion import ejecutar_diversificacion
+from sales_intel.scoring.variables_scoring import obtener_pesos
+from sales_intel.utils.config import SCORING_DIR, TOP_PROSPECTOS_DIR
 
 import pipeline as pipeline_cli
 

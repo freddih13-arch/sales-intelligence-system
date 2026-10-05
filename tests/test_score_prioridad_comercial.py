@@ -14,9 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pandas as pd
 
-from bold_intel.scoring.motor_scoring import ESTADOS_SCOREABLES, calcular_scores
-from bold_intel.scoring.variables_scoring import obtener_pesos
-from bold_intel.utils.config import SCORING_DIR
+from sales_intel.scoring.motor_scoring import ESTADOS_SCOREABLES, calcular_scores
+from sales_intel.scoring.variables_scoring import obtener_pesos
+from sales_intel.utils.config import SCORING_DIR
 
 _PARQUET = SCORING_DIR / "dataset_preparado_scoring.parquet"
 _CACHE: dict = {}
@@ -86,7 +86,7 @@ def test_5_geografia_no_altera_el_score():
     geográfica en absoluto."""
     import inspect
 
-    from bold_intel.scoring import motor_scoring as ms
+    from sales_intel.scoring import motor_scoring as ms
 
     codigo = inspect.getsource(ms)
     assert "municipio" not in codigo

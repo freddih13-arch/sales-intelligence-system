@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pandas as pd
 import pytest
 
-from bold_intel.reportes.ejecutar_top_n import (
+from sales_intel.reportes.ejecutar_top_n import (
     CAMPOS_TOP_N_COMERCIAL,
     ErrorValidacionTopN,
     _validar_estado_exclusion,
@@ -22,7 +22,7 @@ from bold_intel.reportes.ejecutar_top_n import (
     _validar_todos_coinciden,
     ejecutar_top_n,
 )
-from bold_intel.utils.config import RAW_DIR
+from sales_intel.utils.config import RAW_DIR
 
 # ---------------------------------------------------------------------------
 # Fixture: snapshot `scored` sintético -- 5 filas SIN_COINCIDENCIA, cada una

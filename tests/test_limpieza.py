@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from bold_intel.normalizacion.limpieza import (
+from sales_intel.normalizacion.limpieza import (
     es_valor_nulo_declarado,
     normalizar_email,
     normalizar_nit,

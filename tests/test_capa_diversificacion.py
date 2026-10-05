@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pandas as pd
 
-from bold_intel.diversificacion.capa_diversificacion import (
+from sales_intel.diversificacion.capa_diversificacion import (
     M_SUAVIZADO,
     ConfiguracionDiversificacion,
     bucket_sector,
@@ -25,8 +25,8 @@ from bold_intel.diversificacion.capa_diversificacion import (
     participacion_suavizada,
     umbral_activacion,
 )
-from bold_intel.scoring.variables_scoring import obtener_pesos
-from bold_intel.utils.config import SCORING_DIR
+from sales_intel.scoring.variables_scoring import obtener_pesos
+from sales_intel.utils.config import SCORING_DIR
 
 _PARQUET = SCORING_DIR / "empresas_scored.parquet"
 _CACHE: dict = {}
@@ -170,7 +170,7 @@ def test_9_no_existe_hardcode_especifico_para_horeca_pereira():
     # es una constante de mapeo, no una condición).
     import inspect
 
-    from bold_intel.diversificacion import capa_diversificacion as cd
+    from sales_intel.diversificacion import capa_diversificacion as cd
 
     codigo = inspect.getsource(cd)
     assert "pereira" not in codigo.lower(), "no debe existir ninguna mención a Pereira en la lógica del módulo"
@@ -501,7 +501,7 @@ def test_29_reproducible_entre_procesos_distintos():
     raiz_04_sistema = str(Path(__file__).resolve().parents[1])
     script = (
         "import sys; sys.path.insert(0, 'src'); "
-        "from bold_intel.diversificacion.capa_diversificacion import clave_desempate_hash; "
+        "from sales_intel.diversificacion.capa_diversificacion import clave_desempate_hash; "
         "print(clave_desempate_hash('ENT-0000123'))"
     )
     resultados = set()
@@ -532,7 +532,7 @@ def test_31_clave_desempate_depende_solo_del_id_y_no_usa_hash_nativo():
     id_fijo = "ENT-0000777"
     assert clave_desempate_hash(id_fijo) == clave_desempate_hash(id_fijo)
 
-    from bold_intel.diversificacion import capa_diversificacion as cd
+    from sales_intel.diversificacion import capa_diversificacion as cd
 
     # Inspección de BYTECODE (no de texto/docstring, que sí puede mencionar
     # "hash()" o "aleatorio" en prosa explicativa sin llamarlos realmente):

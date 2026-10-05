@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import (
+from sales_intel.enriquecimiento_legal.capa_enriquecimiento_legal import (
     CAMPOS_COMERCIALES,
     RESULTADOS_MATCH,
     clasificar_match,
@@ -22,7 +22,7 @@ from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import (
     preparar_registro_enriquecido,
     resolver_registro_por_estado_vigente,
 )
-from bold_intel.enriquecimiento_legal.cliente_confecamaras import RespuestaConfecamaras
+from sales_intel.enriquecimiento_legal.cliente_confecamaras import RespuestaConfecamaras
 
 
 class ClienteConfecamarasMock:

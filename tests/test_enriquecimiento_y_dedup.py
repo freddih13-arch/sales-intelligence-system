@@ -8,25 +8,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from bold_intel.deduplicacion.dedup_registros import generar_clave_negocio
-from bold_intel.enriquecimiento.clasificador_tamano import clasificar_tamano
-from bold_intel.enriquecimiento.mapeo_sectorial import obtener_sector_bold
+from sales_intel.deduplicacion.dedup_registros import generar_clave_negocio
+from sales_intel.enriquecimiento.clasificador_tamano import clasificar_tamano
+from sales_intel.enriquecimiento.mapeo_sectorial import obtener_sector_comercial
 
 
 def test_sector_bold_por_excepcion_especifica():
-    r = obtener_sector_bold("G4773 ** Comercio al por menor de productos farmaceuticos")
+    r = obtener_sector_comercial("G4773 ** Comercio al por menor de productos farmaceuticos")
     assert r["sector_bold"] == "Salud / Farmacias"
     assert r["encaje_pagos_bold"] == "alto"
 
 
 def test_sector_bold_por_seccion_general():
-    r = obtener_sector_bold("I5611 ** Expendio a la mesa de comidas preparadas")
+    r = obtener_sector_comercial("I5611 ** Expendio a la mesa de comidas preparadas")
     assert r["seccion"] == "I"
     assert r["sector_bold"] == "Gastronomía y Hotelería"
 
 
 def test_sector_bold_codigo_no_reconocido():
-    r = obtener_sector_bold("texto sin formato ciiu")
+    r = obtener_sector_comercial("texto sin formato ciiu")
     assert r["sector_bold"] is None
 
 

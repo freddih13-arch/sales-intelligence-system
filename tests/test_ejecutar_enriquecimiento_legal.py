@@ -23,14 +23,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pandas as pd
 import pytest
 
-from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
-from bold_intel.enriquecimiento_legal.cliente_confecamaras import (
+from sales_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
+from sales_intel.enriquecimiento_legal.cliente_confecamaras import (
     CacheEnMemoria,
     PoliticaResiliencia,
     RegistradorEnMemoria,
     RespuestaConfecamaras,
 )
-from bold_intel.reportes.ejecutar_enriquecimiento_legal import ejecutar_enriquecimiento_legal
+from sales_intel.reportes.ejecutar_enriquecimiento_legal import ejecutar_enriquecimiento_legal
 
 
 # ---------------------------------------------------------------------------

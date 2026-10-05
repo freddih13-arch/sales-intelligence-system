@@ -16,12 +16,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pytest
 
-from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
-from bold_intel.enriquecimiento_legal.escritor_enriquecimiento import (
+from sales_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
+from sales_intel.enriquecimiento_legal.escritor_enriquecimiento import (
     ErrorValidacionEnriquecimiento,
     escribir_enriquecimiento_comercial,
 )
-from bold_intel.utils.config import RAW_DIR, SCORING_DIR, SISTEMA_DIR, TOP_PROSPECTOS_DIR
+from sales_intel.utils.config import RAW_DIR, SCORING_DIR, SISTEMA_DIR, TOP_PROSPECTOS_DIR
 
 RUTA_TOP100_REAL = TOP_PROSPECTOS_DIR / "top100_diversificado_20260902.csv"
 RUTA_PARQUET_SCORING = SCORING_DIR / "empresas_scored.parquet"

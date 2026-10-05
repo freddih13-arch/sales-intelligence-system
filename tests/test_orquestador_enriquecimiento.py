@@ -15,14 +15,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pandas as pd
 
-from bold_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
-from bold_intel.enriquecimiento_legal.cliente_confecamaras import CacheEnMemoria, RespuestaConfecamaras
-from bold_intel.enriquecimiento_legal.orquestador_enriquecimiento import (
+from sales_intel.enriquecimiento_legal.capa_enriquecimiento_legal import CAMPOS_COMERCIALES
+from sales_intel.enriquecimiento_legal.cliente_confecamaras import CacheEnMemoria, RespuestaConfecamaras
+from sales_intel.enriquecimiento_legal.orquestador_enriquecimiento import (
     enriquecer_prospectos,
     enriquecer_top_n_desde_csv,
     leer_prospectos_desde_csv,
 )
-from bold_intel.utils.config import TOP_PROSPECTOS_DIR
+from sales_intel.utils.config import TOP_PROSPECTOS_DIR
 
 RUTA_TOP100_REAL = TOP_PROSPECTOS_DIR / "top100_diversificado_20260902.csv"
 
