@@ -103,4 +103,4 @@ temp/
 # CONFIGURACIONES LOCALES (no templates)
 # ============================================================
 config/*.yaml
-!config/*.template.yaml
+!config/*.template.yamlsrc/sales_intelligence.egg-info/
