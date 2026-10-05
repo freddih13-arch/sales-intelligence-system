@@ -3,7 +3,7 @@
 **Commercial Intelligence Pipeline for Fintech / Payments / B2B Sales**
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/release/python-312/)
-[![Tests Passing](https://img.shields.io/badge/Tests-7%2F7-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-50%2F50-brightgreen.svg)](tests/)
 [![No AI/ML](https://img.shields.io/badge/AI%2FML-None-orange.svg)](#no-ia--ml--verificado)
 [![Local-First](https://img.shields.io/badge/Architecture-Local--First-green.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -33,7 +33,8 @@ Un **pipeline de inteligencia comercial de 7 fases** que transforma bases fragme
 | Universo scoreable | 377,215 (SIN_COINCIDENCIA + CANDIDATO_AMBIGUO) |
 | Score range validado | 0–99.75 |
 | Top 100 diversificado generado | 2026-09-02 (M=22, taxonomía V2, desempate F SHA-256) |
-| Tests automatizados | 31 validaciones de scoring + tests de config |
+| Validaciones de scoring automatizadas | 31 (test_score_prioridad_comercial.py) |
+| Tests de configuración | 7 (test_config.py) |
 
 > ⚠️ **Esta demo usa 1,000 entidades SINTÉTICAS generadas con el motor real.** Las cifras arriba corresponden al sistema original auditado en producción.
 
@@ -43,15 +44,83 @@ Un **pipeline de inteligencia comercial de 7 fases** que transforma bases fragme
 
 ```mermaid
 flowchart TD
-    RAW[01_BASES_RAW<br/>50 fuentes / 6.7M registros<br/>SOLO LECTURA] --> ING[1. INGESTA<br/>44 fuentes pequeñas/medianas<br/>Parquet inmutable]
-    ING --> NORM[2. NORMALIZACIÓN<br/>Esquema canónico unificado<br/>541,511 registros]
-    NORM --> DEDUP[3. DEDUPLICACIÓN<br/>Conservadora: solo NIT exacto + matrícula+cámara fusionan<br/>408,907 entidades / 37K candidatos trazables]
-    DEDUP --> ENR[4. ENRIQUECIMIENTO<br/>CIIU → Sector Vertical (taxonomía V2)<br/>Tamaño, vigencia, confianza]
-    ENR --> EXCL[5. EXCLUSIÓN vs PIPELINE INTERNO<br/>CRM + HUBS solo como llaves<br/>ALTA/MEDIA/AMBIGUO — nunca exclusión por nombre]
-    EXCL --> SCORE[6. SCORING<br/>Fit 40% / Escala 35% / Contacto 25%<br/>Factor cobertura + Calidad peso 0]
-    SCORE --> DIV[7. DIVERSIFICACIÓN<br/>Bayesiana M=22 / 2 fases / Tope duro<br/>Desempate F: SHA-256(entidad_dedup_id)]
-    DIV --> TOP[TOP N LISTO PARA LLAMAR<br/>Explicable / Auditable / Reproducible]
-```
+    subgraph RAW["01_BASES_RAW - SOLO LECTURA"]
+        RAW1["50 fuentes\nCámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)\nDirectorios sectoriales (RNT, REPS, salud, ferreterías...)\n5 internas Bold (CRM + 4 HUBS)"]
+        RAW2["~6.7M registros crudos\nIncluye maestro nacional 1.4GB / 6.26M filas\nFormatos: CSV, XLSX, codificaciones variables"]
+    end
+
+    subgraph ING["1. INGESTA - 02_PROCESADAS/01_ingesta/"]
+        ING1["Lectura robusta CSV/XLSX\nEncoding auto, delimitador auto\nFilas vacías descartadas, headers variables"]
+        ING2["Parquet inmutable 1:1 por fuente\n+ source_id, hoja_origen, fila_origen\nCatálogo actualizado"]
+        ING3["44 fuentes pequeñas/medianas ingeridas\nNacional 1.4GB excluido (fase aislada posterior)\n5 duplicados exactos omitidos por hash"]
+    end
+
+    subgraph NORM["2. NORMALIZACIÓN - 02_PROCESADAS/02_normalizado/"]
+        NORM1["Mapeo columnas YAML -> esquema canónico (62 campos)\nLimpieza: trim, nulos, '<NA>'->NaN, unidecode"]
+        NORM2["Normalización NIT/matrícula/texto\nValidación placeholders (dígito repetido)"]
+        NORM3["541,511 registros normalizados\nReporte calidad por fuente"]
+    end
+
+    subgraph DEDUP["3. DEDUPLICACIÓN - 02_PROCESADAS/03_deduplicado/"]
+        DEDUP1["Conservadora - Solo 2 fusionan auto:\n1. NIT válido exacto (partición por municipio si multi-sede)\n2. Matrícula válida + cámara compatible (nunca matrícula sola)"]
+        DEDUP2["Razón social+municipio exacto + Fuzzy (RapidFuzz >=85)\n-> CANDIDATOS trazables (grupo_id, método, confianza)\nNUNCA fusionan automáticamente"]
+        DEDUP3["Union-Find para consolidación\nEntidad maestra = mayor completitud\nConflictos documentados en JSON\n408,907 entidades únicas (24.49% reducción)"]
+    end
+
+    subgraph ENR["4. ENRIQUECIMIENTO - 02_PROCESADAS/04_enriquecido/"]
+        ENR1["CIIU -> Sector Vertical (taxonomía V2)\nSección CIIU + excepciones código específico (G4773, G4752)"]
+        ENR2["Tamaño: ordinal(tamano_empresa) o percentil(num_empleados)\nVigencia: percentil(ultimo_ano_renovado limpio)"]
+        ENR3["Confianza dato: confirmado/externo/inferido/validado_manual\nFlag DANE ambiguo por municipio"]
+    end
+
+    subgraph EXCL["5. EXCLUSIÓN vs PIPELINE INTERNO - 02_PROCESADAS/05_exclusion/"]
+        EXCL1["CRM (42K leads) + 4 HUBS (Pereira)\nSOLO llaves mínimas: NIT/matrícula/razon_social/ciudad\nNUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
+        EXCL2["Jerarquía (falso negativo > falso positivo):\nALTA: NIT exacto -> 31,604\nMEDIA: matrícula+cámara compatible -> 88\nAMBIGUO: nombre/fuzzy -> 484 (nunca exclusión auto)"]
+        EXCL3["Matches documentados en matches_bold.parquet\ntipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
+    end
+
+    subgraph SCORE["6. SCORING - 02_PROCESADAS/06_scoring/"]
+        SCORE1["Score de Prioridad Comercial v1-final\n3 dimensiones ponderadas (suman 1.00):\n• Fit Comercial 40% - sector_vertical (taxonomía V2, sin geografía)\n• Escala/Potencial 35% - tamaño ordinal + percentil empleados + percentil vigencia\n• Contactabilidad 25% - {tel+email=1.0, solo uno=0.6, ninguno=0.0} (nunca faltante)"]
+        SCORE2["Fórmula cobertura (no imputa 0):\nscore_base = 100 x Σ(peso_i x dim_i) / Σ(peso_i disponibles)\nfactor_cobertura = 0.70 + 0.30 x (dims_disponibles/3)\nscore_final = score_base x factor_cobertura"]
+        SCORE3["Calidad/Confianza (peso 0, paralela):\nAlta/Media/Baja desde confianza_deduplicacion + campos_conflicto + flag_DANE_ambiguo\nMás datos ≠ mejor prospecto"]
+        SCORE4["Universo: SIN_COINCIDENCIA (376,731) + CANDIDATO_AMBIGUO (484) = 377,215\nEXCLUSION_ALTA/MEDIA (31,692) -> score NULL por diseño\n31 validaciones automatizadas (rango, pesos, no-imputación, geografía excluida...)"]
+    end
+
+    subgraph DIV["7. DIVERSIFICACIÓN - 03_RESULTADOS/top_prospectos/"]
+        DIV1["Bayesiana M=22 (Dirichlet-Multinomial smoothing)\np_suavizada = (conteo + 1 + M·p_x) / (tamaño + 1 + M)\nM=22: barrido 16 valores, mínima sensibilidad estructural"]
+        DIV1b["2 fases:\nFase 1: umbral_activación = clamp(3xp_x, piso, techo)\n• Zona tolerancia (<=umbral ambas dims) -> admisión directa\n• Zona soft (>umbral <=tope_duro) -> busca reemplazo en ventana W\n  Reemplazo admisible + piso calidad (score>=60 and >=85% desplazado)\n• Tope duro (>tope_duro) -> diferir siempre\nFase 2: cierre garantizado (solo tope duro, orden score)"]
+        DIV2["Taxonomía V2 (14 buckets sectoriales):\nHORECA, Ferretería, Salud, Salud/Farmacias, Educación,\nComercio/Retail, Manufactura, Servicios, Servicios Prof.,\nServicios Apoyo, Servicios Públicos, Tecnología, Entretenimiento, Transporte"]
+        DIV3["Desempate F - elimina sesgo por fuente:\nSHA-256(entidad_dedup_id)[:15] -> int (60 bits)\nReproducible, sin PYTHONHASHSEED, sin aleatoriedad"]
+        DIV4["Top N final: explicable, auditable, reproducible\nMétricas: reemplazos, protección calidad, diferidos, recuperados Fase 2"]
+    end
+
+    %% Conexiones
+    RAW --> ING
+    ING --> NORM
+    NORM --> DEDUP
+    DEDUP --> ENR
+    ENR --> EXCL
+    EXCL --> SCORE
+    SCORE --> DIV
+    DIV --> TOP
+
+    %% Estilos
+    classDef raw fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef phase fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef data fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    classDef exec fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef spec fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5
+
+    class RAW1,RAW2 raw
+    class ING1,ING2,ING3 phase
+    class NORM1,NORM2,NORM3 phase
+    class DEDUP1,DEDUP2,DEDUP3 phase
+    class ENR1,ENR2,ENR3 phase
+    class EXCL1,EXCL2,EXCL3 phase
+    class SCORE1,SCORE2,SCORE3,SCORE4 phase
+    class DIV1,DIV1b,DIV2,DIV3,DIV4 phase
+    class TOP exec
+    class MINERIA spec
 
 ---
 
@@ -147,8 +216,13 @@ Cada archivo `.template.yaml` en `config/` documenta la estructura completa. Par
 ## 🧪 Tests
 
 ```bash
+# Tests de configuración (7)
 ./venv/bin/python tests/test_config.py
 # 7/7 tests passing: estructura config, mapeos, scoring, advertencias
+
+# Validaciones de scoring (31)
+./venv/bin/python tests/test_score_prioridad_comercial.py
+# 31/31 tests passing: rango, pesos, no-imputación, geografía, cobertura, etc.
 ```
 
 ---

@@ -120,7 +120,8 @@ TOP N LISTO PARA LLAMAR — Explicable, Auditable, Reproducible
 | Score range validado | 0–99.75 | `test_score_prioridad_comercial.py` |
 | Factor_cobertura observado | {0.80, 0.90, 1.00} | `reporte_score_prioridad_comercial.md` |
 | Top 100 diversificado | 2026-09-02 | `top_prospectos/top100_diversificado_20260902.csv` |
-| Tests scoring | 31/31 passing | `test_score_prioridad_comercial.py` |
+| Validaciones scoring automatizadas | 31/31 passing | `test_score_prioridad_comercial.py` (11 nuevos + 20 preexistentes) |
+| Tests de configuración | 7/7 passing | `test_config.py` |
 
 > **Demo pública**: 1,000 entidades sintéticas generadas con el **mismo motor real** (seed=42, reproducible).
 
