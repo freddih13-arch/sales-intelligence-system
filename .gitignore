@@ -104,3 +104,4 @@ temp/
 # ============================================================
 config/*.yaml
 !config/*.template.yamlsrc/sales_intelligence.egg-info/
+src/sales_intelligence.egg-info/
