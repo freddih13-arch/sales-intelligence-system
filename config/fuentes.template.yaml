@@ -1,0 +1,115 @@
+# fuentes.template.yaml
+# Catálogo declarativo de fuentes de datos para el pipeline de inteligencia comercial.
+# TEMPLATE: Reemplazar con tus propias fuentes reales.
+#
+# Este archivo es la ÚNICA fuente de verdad sobre qué hay en 01_BASES_RAW/ y
+# cómo debe tratarse cada archivo. El pipeline de ingesta lee este catálogo,
+# NO escanea la carpeta directamente, para que cada decisión quede explícita y versionada.
+#
+# IMPORTANTE: los campos "registros_aprox" son estimados durante la auditoría.
+# El campo "ruta_relativa" es relativo a 01_BASES_RAW/.
+#
+# Estado de este archivo: TEMPLATE — adaptar a tus fuentes reales.
+
+metadata:
+  version: "v1-template"
+  fecha_creacion: "2026-09-01"
+  total_fuentes: 0  # actualizar según tus fuentes
+  categorias_validas:
+    - general_regional            # directorio multisector de una cámara/región
+    - general_nacional_maestro    # archivo nacional maestro (ej. RUES nacional)
+    - sectorial                   # vertical específica (hotelería, salud, etc.)
+    - enriquecimiento_auxiliar    # solo llaves (NIT/CIIU), sin nombre/contacto
+    - sin_utilidad                # no es una base de empresas / prospección
+  confianza_validas: [confirmado, externo]
+  duplicado_estados: [unico, duplicado_exacto, casi_duplicado, version_actualizada]
+
+fuentes:
+
+  # EJEMPLOS — ELIMINAR Y REEMPLAZAR CON TUS FUENTES REALES:
+
+  - id: ejemplo_camara_comercio_regional_2026
+    archivo: "ejemplo_camara_comercio_regional_2026.csv"
+    formato: csv
+    encoding: utf-8
+    delimitador: ","
+    tamano_bytes: 0
+    registros_aprox: 0
+    columnas_n: 0
+    geografia:
+      municipio_principal: "EJEMPLO_CIUDAD"
+      departamento: "EJEMPLO_DEPARTAMENTO"
+      cobertura: "Descripción de cobertura geográfica"
+    categoria: general_regional
+    nivel_confianza_fuente: confirmado
+    duplicado: {estado: unico, referencia: null}
+    notas: "Template: reemplazar con fuente real de Cámara de Comercio regional."
+
+  - id: ejemplo_directorio_sectorial_2026
+    archivo: "ejemplo_directorio_sectorial_2026.csv"
+    formato: csv
+    encoding: utf-8
+    delimitador: ","
+    tamano_bytes: 0
+    registros_aprox: 0
+    columnas_n: 0
+    geografia:
+      municipio_principal: "EJEMPLO_CIUDAD"
+      departamento: "EJEMPLO_DEPARTAMENTO"
+      cobertura: "Ciudad + municipios aledaños"
+    categoria: sectorial
+    sector: "Ejemplo: Hotelería / Ferretería / Salud"
+    nivel_confianza_fuente: confirmado
+    duplicado: {estado: unico, referencia: null}
+    notas: "Template: reemplazar con directorio sectorial real (RNT, REPS, etc.)."
+
+  # ---------------------------------------------------------------------
+  # NACIONAL — MAESTRO (OPCIONAL)
+  # ---------------------------------------------------------------------
+  - id: ejemplo_nacional_maestro_2026
+    archivo: "ejemplo_establecimientos_nacional_2026.csv"
+    formato: csv
+    encoding: utf-8
+    delimitador: ","
+    tamano_bytes: 0
+    registros_aprox: 0
+    columnas_n: 0
+    geografia:
+      municipio_principal: null
+      departamento: null
+      cobertura: "Nacional — múltiples cámaras de comercio"
+    categoria: general_nacional_maestro
+    nivel_confianza_fuente: confirmado
+    duplicado: {estado: unico, referencia: null}
+    notas: >
+      Template: archivo nacional maestro (ej. RUES/Establecimientos nacional).
+      Procesar en fase aislada (streaming/chunked) por tamaño.
+      Solo NIT/matrícula/CIIU/estado — sin teléfono/email/dirección.
+
+  # ---------------------------------------------------------------------
+  # SIN UTILIDAD COMERCIAL (ejemplos de qué excluir)
+  # ---------------------------------------------------------------------
+  - id: ejemplo_archivo_sin_utilidad
+    archivo: "ejemplo_registro_normativo_2026.xlsx"
+    formato: xlsx
+    encoding: null
+    delimitador: null
+    tamano_bytes: 0
+    registros_aprox: 0
+    columnas_n: 0
+    geografia: {municipio_principal: null, departamento: null, cobertura: null}
+    categoria: sin_utilidad
+    nivel_confianza_fuente: externo
+    duplicado: {estado: unico, referencia: null}
+    notas: "NO es una base de empresas. Excluir del pipeline permanentemente."
+
+# ---------------------------------------------------------------------
+# INSTRUCCIONES PARA USO REAL:
+# ---------------------------------------------------------------------
+# 1. Copiar este archivo a fuentes.yaml
+# 2. Ejecutar auditoría de 01_BASES_RAW/ para identificar tus 50+ archivos
+# 3. Completar cada entrada con: id único, archivo real, formato, encoding,
+#    delimitador, tamaño, registros_aprox, geografía, categoría, confianza
+# 4. Marcar duplicados exactos/casi_duplicados para que la ingesta los omita
+# 5. NUNCA incluir fuentes internas de tu empresa (CRM, HUBS) aquí —
+#    esas se declaran SOLO en exclusion/ como llaves de exclusión.

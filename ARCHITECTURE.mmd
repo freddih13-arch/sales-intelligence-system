@@ -1,0 +1,79 @@
+flowchart TD
+    %% ============================================================
+    %% BOLD_SALES_INTELLIGENCE — Arquitectura 7 Fases (Mermaid)
+    %% ============================================================
+    %% Render: https://mermaid.live | GitHub | Notion | Obsidian
+    %% ============================================================
+
+    subgraph RAW["01_BASES_RAW — SOLO LECTURA"]
+        RAW1["50 fuentes<br/>Cámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)<br/>Directorios sectoriales (RNT, REPS, salud, ferreterías...)<br/>5 internas Bold (CRM + 4 HUBS)"]
+        RAW2["~6.7M registros crudos<br/>Incluye maestro nacional 1.4GB / 6.26M filas<br/>Formatos: CSV, XLSX, codificaciones variables"]
+    end
+
+    subgraph ING["1. INGESTA — 02_PROCESADAS/01_ingesta/"]
+        ING1["Lectura robusta CSV/XLSX<br/>Encoding auto-detect, delimitador auto<br/>Filas vacías descartadas, headers variables"]
+        ING2["Parquet inmutable 1:1 por fuente<br/>+ source_id, hoja_origen, fila_origen<br/>Catálogo actualizado (fuentes_registradas.csv)"]
+        ING3["44 fuentes pequeñas/medianas ingeridas<br/>Nacional 1.4GB excluido (fase aislada posterior)<br/>5 duplicados exactos omitidos por hash"]
+    end
+
+    subgraph NORM["2. NORMALIZACIÓN — 02_PROCESADAS/02_normalizado/"]
+        NORM1["Mapeo columnas YAML → esquema canónico (62 campos)<br/>Limpieza: trim, nulos, '<NA>'→NaN, unidecode"]
+        NORM2["Normalización NIT/matrícula/texto<br/>Validación placeholders (dígito repetido)"]
+        NORM3["541,511 registros normalizados<br/>Reporte calidad por fuente (cobertura por campo)"]
+    end
+
+    subgraph DEDUP["3. DEDUPLICACIÓN — 02_PROCESADAS/03_deduplicado/"]
+        DEDUP1["Conservadora — Solo 2 fusionan auto:<br/>① NIT válido exacto (partición por municipio si multi-sede)<br/>② Matrícula válida + cámara compatible (nunca matrícula sola)"]
+        DEDUP2["Razón social+municipio exacto + Fuzzy (RapidFuzz ≥85)<br/>→ CANDIDATOS trazables (grupo_id, método, confianza)<br/>NUNCA fusionan automáticamente"]
+        DEDUP3["Union-Find para consolidación<br/>Entidad maestra = mayor completitud<br/>Conflictos documentados en JSON<br/>408,907 entidades únicas (24.49% reducción)"]
+    end
+
+    subgraph ENR["4. ENRIQUECIMIENTO — 02_PROCESADAS/04_enriquecido/"]
+        ENR1["CIIU → Sector Vertical (taxonomía V2)<br/>Sección CIIU + excepciones código específico (G4773, G4752)"]
+        ENR2["Tamaño: ordinal(tamano_empresa) o percentil(num_empleados)<br/>Vigencia: percentil(ultimo_ano_renovado limpio)"]
+        ENR3["Confianza dato: confirmado/externo/inferido/validado_manual<br/>Flag DANE ambiguo por municipio"]
+    end
+
+    subgraph EXCL["5. EXCLUSIÓN vs PIPELINE INTERNO — 02_PROCESADAS/05_exclusion/"]
+        EXCL1["CRM (42K leads) + 4 HUBS (Pereira)<br/>SOLO llaves mínimas: NIT/matrícula/razon_social/ciudad<br/>NUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
+        EXCL2["Jerarquía (falso negativo > falso positivo):<br/>ALTA: NIT exacto → 31,604<br/>MEDIA: matrícula + cámara compatible → 88<br/>AMBIGUO: razón social exacta/fuzzy → 484 (nunca exclusión auto)"]
+        EXCL3["Matches documentados en matches_bold.parquet<br/>tipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
+    end
+
+    subgraph SCORE["6. SCORING — 02_PROCESADAS/06_scoring/"]
+        SCORE1["Score de Prioridad Comercial v1-final<br/>3 dimensiones ponderadas (suman 1.00):<br/>• Fit Comercial 40% — sector_vertical (taxonomía V2, sin geografía)<br/>• Escala/Potencial 35% — tamaño ordinal + percentil empleados + percentil vigencia<br/>• Contactabilidad 25% — {tel+email=1.0, solo uno=0.6, ninguno=0.0} (nunca faltante)"]
+        SCORE2["Fórmula cobertura (no imputa 0):<br/>score_base = 100 × Σ(pesoᵢ×dimᵢ) / Σ(pesoᵢ disponibles)<br/>factor_cobertura = 0.70 + 0.30 × (dims_disponibles/3)<br/>score_final = score_base × factor_cobertura"]
+        SCORE3["Calidad/Confianza (peso 0, paralela):<br/>Alta/Media/Baja desde confianza_deduplicacion + campos_conflicto + flag_DANE_ambiguo<br/>Más datos ≠ mejor prospecto"]
+        SCORE4["Universo: SIN_COINCIDENCIA (376,731) + CANDIDATO_AMBIGUO (484) = 377,215<br/>EXCLUSION_ALTA/MEDIA (31,692) → score NULL por diseño<br/>31 validaciones automatizadas (rango, pesos, no-imputación, geografía excluida...)"]
+    end
+
+    subgraph DIV["7. DIVERSIFICACIÓN — 03_RESULTADOS/top_prospectos/"]
+        DIV1["Bayesiana M=22 (Dirichlet-Multinomial smoothing)<br/>p_suavizada = (conteo + 1 + M·pₓ) / (tamaño + 1 + M)<br/>M=22: barrido 16 valores, mínima sensibilidad estructural"]
+        DIV1b["2 fases:<br/>Fase 1: umbral_activación = clamp(3×pₓ, piso, techo)<br/>• Zona tolerancia (≤umbral ambas dims) → admisión directa<br/>• Zona soft (>umbral ≤tope_duro) → busca reemplazo en ventana W<br/>  Reemplazo admisible + piso calidad (score≥60 ∧ ≥85% desplazado)<br/>• Tope duro (>tope_duro) → diferir siempre<br/>Fase 2: cierre garantizado (solo tope duro, orden score)"]
+        DIV2["Taxonomía V2 (14 buckets sectoriales):<br/>HORECA, Ferretería, Salud, Salud/Farmacias, Educación,<br/>Comercio/Retail, Manufactura, Servicios, Servicios Prof.,<br/>Servicios Apoyo, Servicios Públicos, Tecnología, Entretenimiento, Transporte"]
+        DIV3["Desempate F — elimina sesgo por fuente:<br/>SHA-256(entidad_dedup_id)[:15] → int (60 bits)<br/>Reproducible, sin PYTHONHASHSEED, sin aleatoriedad"]
+        DIV4["Top N final: explicable, auditable, reproducible<br/>Métricas: reemplazos, protección calidad, diferidos, recuperados Fase 2"]
+    end
+
+    %% Conexiones
+    RAW --> ING
+    ING --> NORM
+    NORM --> DEDUP
+    DEDUP --> ENR
+    ENR --> EXCL
+    EXCL --> SCORE
+    SCORE --> DIV
+
+    %% Estilos
+    classDef raw fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef phase fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef data fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+
+    class RAW1,RAW2 raw
+    class ING1,ING2,ING3 phase
+    class NORM1,NORM2,NORM3 phase
+    class DEDUP1,DEDUP2,DEDUP3 phase
+    class ENR1,ENR2,ENR3 phase
+    class EXCL1,EXCL2,EXCL3 phase
+    class SCORE1,SCORE2,SCORE3,SCORE4 phase
+    class DIV1,DIV1b,DIV2,DIV3,DIV4 phase

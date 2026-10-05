@@ -1,0 +1,106 @@
+# BOLD_SALES_INTELLIGENCE — Public Demo
+# .gitignore para repo público — PROTEGE DATOS REALES Y SECRETS
+
+# ============================================================
+# DATOS REALES — NUNCA COMMITEAR
+# ============================================================
+01_BASES_RAW/
+02_PROCESADAS/
+03_RESULTADOS/
+*.parquet
+*.sqlite
+*.db
+*.duckdb
+
+# ============================================================
+# DEMO OUTPUTS — GENERADOS LOCALMENTE, NO EN REPO
+# ============================================================
+demo_data/
+*.sinteticas.*
+*sintetico*
+top*_diversificado*
+empresas_sinteticas*
+
+# ============================================================
+# SECRETS Y CREDENCIALES
+# ============================================================
+.env
+.env.*
+*.env
+.env.local
+.env.production
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+config/secrets.yaml
+
+# ============================================================
+# ENTORNO VIRTUAL Y CACHE
+# ============================================================
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ============================================================
+# IDE Y EDITORES
+# ============================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# LOGS Y TEMPORALES
+# ============================================================
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+
+# ============================================================
+# ARCHIVOS GRANDES / BINARIOS
+# ============================================================
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.iso
+*.img
+
+# ============================================================
+# DOCUMENTOS PERSONALES / PII
+# ============================================================
+*CV*.pdf
+*CV*.docx
+*curriculum*
+*hoja_vida*
+*identificacion*
+*cedula*
+*pasaporte*
+*foto*
+*firma*
+
+# ============================================================
+# CONFIGURACIONES LOCALES (no templates)
+# ============================================================
+config/*.yaml
+!config/*.template.yaml

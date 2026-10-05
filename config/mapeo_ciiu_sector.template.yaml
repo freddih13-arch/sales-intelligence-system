@@ -1,0 +1,173 @@
+# mapeo_ciiu_sector.template.yaml
+# Mapeo de códigos CIIU (Rev. 4 A.C.) a "sector_comercial": una vertical legible
+# usada para filtrar y para el Score de Prioridad Comercial.
+# TEMPLATE: Adaptar a tu estrategia comercial y validar con tu equipo de ventas.
+#
+# ESTADO: TEMPLATE — el campo "encaje_pagos" es una HIPÓTESIS DE TRABAJO
+# (alto/medio/bajo/no_aplica según qué tan típico es que el sector cobre con
+# medios de pago electrónicos en punto de venta), NO un dato medido.
+# Debe revisarse y ajustarse con el equipo comercial antes de usar en scoring real.
+#
+# La clasificación se hace por la LETRA de sección del código CIIU (primer
+# carácter, ej. "G4773" -> sección G). Es deliberadamente gruesa para V1;
+# se puede refinar por rango de 2 dígitos en una versión posterior.
+
+metadata:
+  version: "v1-template"
+  fecha_creacion: "2026-09-01"
+  nivel_granularidad: "sección CIIU (1 letra)"
+  advertencia: "encaje_pagos es una hipótesis de trabajo, no un dato validado. Confirmar con equipo comercial antes de usar en producción."
+
+secciones:
+
+  A:
+    nombre: "Agricultura, ganadería, caza, silvicultura y pesca"
+    sector_comercial: "Agro"
+    encaje_pagos: bajo
+    nota: "Bajo uso típico de punto de venta electrónico directo al público."
+
+  B:
+    nombre: "Explotación de minas y canteras"
+    sector_comercial: "Minería"
+    encaje_pagos: no_aplica
+    nota: "Sin venta directa al consumidor final."
+
+  C:
+    nombre: "Industria manufacturera"
+    sector_comercial: "Manufactura"
+    encaje_pagos: medio
+    nota: "Depende de si vende B2C directo o solo B2B/mayorista."
+
+  D:
+    nombre: "Suministro de electricidad, gas, vapor"
+    sector_comercial: "Servicios públicos"
+    encaje_pagos: no_aplica
+    nota: null
+
+  E:
+    nombre: "Distribución de agua, alcantarillado, gestión de residuos"
+    sector_comercial: "Servicios públicos"
+    encaje_pagos: no_aplica
+    nota: null
+
+  F:
+    nombre: "Construcción"
+    sector_comercial: "Construcción"
+    encaje_pagos: bajo
+    nota: "Ticket alto pero baja frecuencia de cobro en punto de venta."
+
+  G:
+    nombre: "Comercio al por mayor y al por menor; reparación de vehículos"
+    sector_comercial: "Comercio / Retail"
+    encaje_pagos: alto
+    nota: "Sección con mayor volumen de registros en bases típicas; alto encaje típico para medios de pago."
+
+  H:
+    nombre: "Transporte y almacenamiento"
+    sector_comercial: "Transporte y logística"
+    encaje_pagos: medio
+    nota: null
+
+  I:
+    nombre: "Alojamiento y servicios de comida"
+    sector_comercial: "Gastronomía y Hotelería"
+    encaje_pagos: alto
+    nota: "Alta representatividad en bases sectoriales (restaurantes, hoteles, alojamientos)."
+
+  J:
+    nombre: "Información y comunicaciones"
+    sector_comercial: "Tecnología / Comunicaciones"
+    encaje_pagos: medio
+    nota: null
+
+  K:
+    nombre: "Actividades financieras y de seguros"
+    sector_comercial: "Financiero / Seguros"
+    encaje_pagos: bajo
+    nota: "Dinámica de pagos distinta (posible relación de canal, evaluar aparte)."
+
+  L:
+    nombre: "Actividades inmobiliarias"
+    sector_comercial: "Inmobiliario"
+    encaje_pagos: bajo
+    nota: null
+
+  M:
+    nombre: "Actividades profesionales, científicas y técnicas"
+    sector_comercial: "Servicios profesionales"
+    encaje_pagos: medio
+    nota: "Contadores, abogados, consultoría — presentes en varias bases."
+
+  N:
+    nombre: "Actividades de servicios administrativos y de apoyo"
+    sector_comercial: "Servicios de apoyo empresarial"
+    encaje_pagos: medio
+    nota: null
+
+  O:
+    nombre: "Administración pública y defensa"
+    sector_comercial: "Sector público"
+    encaje_pagos: no_aplica
+    nota: "Candidato a excluir de prospección comercial estándar."
+
+  P:
+    nombre: "Educación"
+    sector_comercial: "Educación"
+    encaje_pagos: medio
+    nota: null
+
+  Q:
+    nombre: "Actividades de atención de la salud humana y asistencia social"
+    sector_comercial: "Salud"
+    encaje_pagos: alto
+    nota: "Clínicas, consultorios, prácticas médicas — presentes en bases sectoriales."
+
+  R:
+    nombre: "Actividades artísticas, de entretenimiento y recreación"
+    sector_comercial: "Entretenimiento"
+    encaje_pagos: alto
+    nota: "Bares, discotecas, centros recreativos."
+
+  S:
+    nombre: "Otras actividades de servicios"
+    sector_comercial: "Otros servicios"
+    encaje_pagos: medio
+    nota: null
+
+  T:
+    nombre: "Actividades de los hogares en calidad de empleadores"
+    sector_comercial: "Hogares"
+    encaje_pagos: no_aplica
+    nota: "Excluir de prospección comercial."
+
+  U:
+    nombre: "Actividades de organizaciones y órganos extraterritoriales"
+    sector_comercial: "Extraterritorial"
+    encaje_pagos: no_aplica
+    nota: "Excluir de prospección comercial."
+
+  S9499_ESAL:
+    nombre: "Asociaciones / ESAL (sección S, códigos 94xx)"
+    sector_comercial: "Entidades sin ánimo de lucro"
+    encaje_pagos: bajo
+    nota: "Frecuente en bases regionales; tratar aparte del comercio estándar."
+
+# Reglas de excepción por código completo (más específico que la sección),
+# para casos donde el mapeo por letra sola es demasiado grueso.
+# Completar progresivamente según casos detectados en tus datos.
+excepciones_codigo_especifico:
+  G4773:
+    sector_comercial: "Salud / Farmacias"
+    encaje_pagos: alto
+    nota: "Farmacias y cosméticos — tratar como Salud, no como Comercio genérico."
+  G4752:
+    sector_comercial: "Ferretería y construcción menor"
+    encaje_pagos: alto
+    nota: "Ferreterías, materiales de construcción — alto encaje por ticket y frecuencia."
+
+# INSTRUCCIONES:
+# 1. Revisar cada sección con tu equipo comercial: ¿el encaje_pagos refleja
+#    la realidad de tu producto/mercado?
+# 2. Añadir excepciones_codigo_especifico para verticales clave de tu negocio
+# 3. Validar contra una muestra de tus datos reales antes de scoring
+# 4. NO copiar valores de otra empresa — cada fintech/payments tiene su foco

@@ -1,0 +1,242 @@
+# mapeo_columnas.template.yaml
+# Diccionario de equivalencias entre nombres de columna observados en fuentes
+# crudas y el esquema canónico de la base maestra.
+# TEMPLATE: Validar contra MUESTRA REAL de tus archivos antes de usar.
+#
+# ESTADO: TEMPLATE — mapeo inicial de referencia.
+# Antes de ejecutar normalización, validar manualmente contra filas reales,
+# NO solo contra nombres de columna. Varias fuentes usan el MISMO nombre
+# para cosas DISTINTAS (ej. "EST-MATRICULA" = estado, no número de matrícula).
+#
+# La comparación se hace normalizada: mayúsculas, sin tildes, espacios colapsados.
+
+metadata:
+  version: "v1-template"
+  fecha_creacion: "2026-09-01"
+  normalizacion_clave: "upper().strip() sin tildes, guiones y espacios múltiples colapsados a uno"
+  advertencia: "Mapeo de referencia. Validar contra muestra real de cada fuente nueva."
+
+# Esquema canónico destino — CAMPOS QUE EXISTEN EN TU BASE MAESTRA FINAL
+esquema_canonico:
+  - nit
+  - matricula
+  - matricula_establecimiento
+  - razon_social
+  - tipo_organizacion
+  - estado_matricula
+  - fecha_matricula
+  - fecha_renovacion
+  - ultimo_ano_renovado
+  - fecha_constitucion
+  - direccion_comercial
+  - barrio_comercial
+  - municipio_comercial
+  - departamento
+  - telefono_comercial_1
+  - telefono_comercial_2
+  - telefono_comercial_3
+  - email_comercial
+  - ciiu_1
+  - ciiu_2
+  - ciiu_3
+  - ciiu_4
+  - actividad_descripcion
+  - tamano_empresa
+  - num_empleados
+  - activo_total
+  - representante_legal
+  - grupo_niif
+  - bic
+  - categoria_matricula
+
+# Cada entrada: campo_canonico -> lista de nombres de columna fuente
+# (ya normalizados) que deben mapearse a él.
+sinonimos:
+
+  nit:
+    - "NIT"
+    - "IDENTIFICACION"
+    - "IDENTIFICACIÓN"
+    - "NUMERO DE IDENTIFICACION"
+    - "NUMERO_IDENTIFICACION"
+    # ADVERTENCIA: en algunas fuentes "ID COMER." contiene matrícula,
+    # en otras NIT. VALIDAR POR FUENTE antes de mapear globalmente.
+
+  matricula:
+    - "MATRICULA"
+    - "MATRÍCULA"
+    - "MAT."
+
+  matricula_establecimiento:
+    - "MAT_ESTABLECIMIENTO"
+    - "MAT ESTABLECIMIENTO"
+    # Distinto de "matricula" — identifica el establecimiento, no el negocio.
+
+  razon_social:
+    - "RAZON SOCIAL"
+    - "RAZÓN SOCIAL"
+    - "NOMBRE O RAZON SOCIAL"
+    - "NOMBRE"
+    - "SEDE -NOMBRE"
+    - "NOMBRE DE ESTABLECIMIENTO"
+
+  tipo_organizacion:
+    - "ORGANIZACION"
+    - "ORGANIZACIÓN"
+    - "TI"
+    - "PROPONENTE"
+
+  estado_matricula:
+    - "ESTADO"
+    - "ESTADO_MAT"
+    - "ESTADO DE LA MATRICULA"
+    - "ESTADO_MATRICULA"
+    - "CODIGO_ESTADO_MATRICULA"
+    # OJO: en algunos archivos "EST-MATRICULA" = estado (MA/MC), NO número.
+    - "EST-MATRICULA"
+    - "ESTMATRICULA"
+
+  fecha_matricula:
+    - "FEC-MATRICULA"
+    - "FECHA DE MATRICULA"
+    - "FECHA MATRICULA"
+    - "AÑO-MATRICULA"
+    - "AÑO MATRÍCULA"
+    - "AÑO DE MATRICULA"
+
+  fecha_renovacion:
+    - "FEC-RENOVACION"
+    - "FECHA RENOVACION"
+    - "FECHA_RENOVACION"
+
+  ultimo_ano_renovado:
+    - "ULT-ANO_REN"
+    - "ULTIMO AÑO RENOVADO"
+    - "ULTIMO_ANO_RENOVADO"
+
+  fecha_constitucion:
+    - "FEC-CONSTITUCION"
+    - "FECHA CONSTITUCION"
+
+  direccion_comercial:
+    - "DIR-COMERCIAL"
+    - "DIRECCION COMERCIAL"
+    - "DIRECCIÓN COMERCIAL"
+    - "DIRECCION"
+    - "DIRECCIÓN"
+    - "DIRCOMERCIAL"
+
+  barrio_comercial:
+    - "BARRIO-COMERCIAL"
+    - "BARRIO COMERCIAL"
+
+  municipio_comercial:
+    - "MUN-COMERCIAL"
+    - "MUNICIPIO COMERCIAL"
+    - "MUNCOMERCIAL"
+    - "MUNICIPIO"
+    - "CIUDAD"
+
+  departamento:
+    - "DEPARTAMENTO"
+    - "DEPTO"
+
+  telefono_comercial_1:
+    - "TEL-COM-1"
+    - "TELEFONO COMERCIAL"
+    - "TELÉFONO COMERCIAL"
+    - "TELCOM1"
+    - "TELEFONO"
+    - "TELÉFONO"
+    - "NUMERO_CONTACTO"
+
+  telefono_comercial_2:
+    - "TEL-COM-2"
+    - "TELEFONO2_DC"
+
+  telefono_comercial_3:
+    - "TEL-COM-3"
+
+  email_comercial:
+    - "EMAIL-COMERCIAL"
+    - "CORREO COMERCIAL"
+    - "CORREO ELECTRONICO"
+    - "CORREO ELECTRÓNICO"
+    - "CORREO"
+    - "EMAIL"
+    - "EMAIL COMERCIAL 1"
+
+  ciiu_1:
+    - "CIIU-1"
+    - "CIIU 1"
+    - "CIIU"
+    - "COD_CIIU_ACT_ECON_PRI"
+
+  ciiu_2:
+    - "CIIU-2"
+    - "CIIU2"
+    - "COD_CIIU_ACT_ECON_SEC"
+
+  ciiu_3:
+    - "CIIU-3"
+    - "CIIU3"
+
+  ciiu_4:
+    - "CIIU-4"
+    - "CIIU4"
+
+  actividad_descripcion:
+    - "ACTIVIDAD"
+    - "ACTIVIDAD_P"
+    - "DESCRIPCION CIIU 1"
+    - "DESCRIPCIÓN CIIU 1"
+
+  tamano_empresa:
+    - "TAM-EMPRESA"
+    - "TAMAÑO EMPRESA"
+    - "TAMAÑO EMPRESARIAL"
+    # ADVERTENCIA: "CIIU TAMAÑO EMPRESARIAL" en algunos archivos = código CIIU,
+    # NO categoría de tamaño. VALIDAR ANTES DE MAPEAR.
+
+  num_empleados:
+    - "EMPLEADOS"
+    - "PERSONAL"
+    - "CANTIDAD DE EMPLEADOS"
+
+  activo_total:
+    - "ACTIVO-TOTAL"
+    - "ACTIVO TOTAL"
+
+  representante_legal:
+    - "REP-LEGAL"
+    - "NOM-REP-LEGAL"
+    - "REPRESENTANTE LEGAL"
+    - "NOMBRE DE PROPIETARIO"
+
+  grupo_niif:
+    - "GRUPO-NIIF"
+    - "GRUPO NIIF"
+
+  bic:
+    - "BIC-LEY-1901-2018"
+    - "BIC - LEY 1901 DE 2018"
+
+  categoria_matricula:
+    - "CATEGORIA"
+    - "CATEGORÍA"
+    - "CATEGORIA MATRICULA"
+
+# Columnas vistas que deliberadamente NO se mapean al esquema canónico en V1
+# (se conservan solo en 01_ingesta, sin pasar a normalizado):
+sin_mapear_v1:
+  - "ASIGNADO A"                 # dato interno de gestión comercial — nunca en base maestra
+  - "HISTORIAL_ESTADOS"          # específico de CRM interno
+  - "USER_EMAIL"                 # PII interna — nunca se copia
+  - "MANAGER_EMAIL"              # PII interna — nunca se copia
+
+# INSTRUCCIONES:
+# 1. Copiar a mapeo_columnas.yaml
+# 2. Para CADA fuente nueva: abrir 5-10 filas reales, comparar columnas con esta lista
+# 3. Si una columna tiene el mismo nombre pero distinto significado → añadir regla específica
+# 4. Ejecutar normalización y revisar reporte_calidad_normalizacion.csv
+# 5. Iterar hasta cobertura >95% en campos clave (nit, razon_social, municipio)

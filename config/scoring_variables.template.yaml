@@ -1,0 +1,240 @@
+# scoring_variables.template.yaml
+# Configuración del SCORE DE PRIORIDAD COMERCIAL — TEMPLATE para adaptación propia.
+#
+# ADVERTENCIA DE ALCANCE:
+# Este score NO es una predicción de TPV, facturación ni ingresos. Es un
+# ÍNDICE DE PRIORIZACIÓN RELATIVA entre prospectos, construido a partir de
+# señales indirectas (proxies) disponibles en las bases actuales. Ninguna
+# variable debe presentarse, documentarse ni comunicarse como una estimación
+# directa de venta o de volumen transaccional.
+#
+# HISTORIAL: arquitectura aprobada con 3 dimensiones ponderadas + 1 capa de
+# calidad NO ponderada. Los pesos y escalas DEBEN ser validados con tu
+# equipo comercial antes de usar en producción.
+
+metadata:
+  nombre_score: "Score de Prioridad Comercial"
+  nombre_score_prohibido: "predicción de TPV"   # nunca usar este término
+  version: "v1-template"
+  fecha_aprobacion: "PENDIENTE — validar con equipo comercial"
+  pesos_definidos: false   # cambiar a true tras validación
+  advertencia: >
+    Índice de priorización relativa basado en proxies, no una predicción de
+    TPV/ingresos/facturación. Todas las variables deben presentarse como
+    señales indirectas de potencial, nunca como una cifra financiera estimada.
+  principio_no_imputacion: >
+    Ninguna dimensión faltante se reemplaza por 0, por un promedio ni por
+    ningún valor inventado. Una dimensión sin dato simplemente no participa
+    en el promedio ponderado (ver formula_cobertura), y su ausencia se
+    refleja de forma transparente en factor_cobertura y dimensiones_con_dato.
+
+# Universo de aplicación del score, según estado_exclusion (fase de exclusión
+# contra tu pipeline interno). ADAPTAR CIFRAS A TU REALIDAD.
+universo:
+  priorizable:
+    estado_exclusion: SIN_COINCIDENCIA
+    conteo_esperado: 0   # actualizar tras deduplicación y exclusión reales
+    descripcion: "Universo principal de ranking. Recibe score completo."
+  separado_no_mezclado_en_ranking:
+    estado_exclusion: CANDIDATO_AMBIGUO
+    conteo_esperado: 0   # actualizar
+    descripcion: >
+      Recibe score completo (misma fórmula) para permitir revisión manual
+      futura, pero se mantiene identificable vía estado_exclusion y nunca se
+      mezcla en el ranking/Top N del universo priorizable.
+  excluido_sin_score:
+    estados_exclusion: [EXCLUSION_ALTA, EXCLUSION_MEDIA]
+    conteo_esperado: 0   # actualizar
+    descripcion: >
+      Ya tienen coincidencia con tu pipeline interno (CRM/asignación) —
+      quedan fuera del universo priorizable. Score y componentes en NULL
+      por diseño (no aplica, no es dato faltante). Filas NO se eliminan.
+
+# --- Las 3 dimensiones ponderadas (deben sumar exactamente 1.00 / 100%) ---
+# VALIDAR PESOS CON EQUIPO COMERCIAL ANTES DE PONER pesos_definidos: true
+dimensiones:
+
+  fit_comercial:
+    peso: 0.40   # PROPUESTA INICIAL — validar con equipo comercial
+    campo_fuente: sector_vertical
+    nota: >
+      Usa exclusivamente sector_vertical (reconstruido desde CIIU).
+      NO usa geografía bajo ninguna circunstancia.
+    escala_valores:
+      # Sectores estratégicos — DEFINIR SEGÚN TU FOCO COMERCIAL REAL
+      sectores_estrategicos:
+        "Gastronomía y Hotelería": 1.00
+        "Ferretería y construcción menor": 0.92
+        "Salud": 0.92
+        "Salud / Farmacias": 0.92
+        "Educación": 0.92
+      # Resto: usa encaje_pagos_declarado (alto/medio/bajo/no_aplica de mapeo_ciiu_sector.yaml)
+      encaje_generico:
+        alto: 0.85        # "encaje alto no estratégico"
+        medio: 0.60
+        bajo: 0.35
+        no_aplica: 0.10
+    dimension_faltante_si: "sector_vertical es NULL (no hay CIIU clasificable)"
+
+  escala_potencial:
+    peso: 0.35   # PROPUESTA INICIAL — validar con equipo comercial
+    campos_fuente: [tamano_empresa, num_empleados, ultimo_ano_renovado]
+    formula: >
+      señal_tamaño = ordinal(tamano_empresa) si tamano_empresa tiene valor
+                     interpretable; si no, percentil(num_empleados) si existe;
+                     si no, faltante.
+      señal_vigencia = percentil(ultimo_ano_renovado_limpio) si existe;
+                       si no, faltante.
+      escala_score = promedio simple de las señales que sí tienen dato
+                     (1 o 2 señales). Si ninguna tiene dato, escala_score
+                     es una dimensión faltante.
+    ordinal_tamano_empresa:
+      # Comparación case-insensitive. "N" = residuo sin significado -> faltante
+      micro: 0.25
+      pequena: 0.50      # incluye variantes con/sin tilde
+      mediana: 0.75
+      grande: 1.00       # incluye "gran"
+    percentiles:
+      metodo: "pandas .rank(pct=True), ascendente (mayor valor = mayor percentil)"
+      poblacion_de_referencia: >
+        El percentil de num_empleados y de ultimo_ano_renovado_limpio se
+        calcula sobre el universo SIN_COINCIDENCIA. Las filas CANDIDATO_AMBIGUO
+        se insertan/interpolan contra esa misma distribución de referencia
+        (no se calcula percentil separado sobre su propio grupo), para que
+        el significado del percentil sea comparable entre ambos grupos.
+      limpieza_ultimo_ano_renovado: >
+        Se remueven separadores de miles ("," y ".") antes de interpretar
+        el año (ej. "2,020" -> 2020). Se descarta (queda faltante) cualquier
+        valor que, tras la limpieza, no sea un año de 4 dígitos plausible
+        (1990-2026).
+    dimension_faltante_si: "ni tamano_empresa/num_empleados ni ultimo_ano_renovado tienen dato interpretable"
+
+  contactabilidad:
+    peso: 0.25   # PROPUESTA INICIAL — validar con equipo comercial
+    campos_fuente: [telefono_comercial_1, telefono_comercial_2, telefono_comercial_3, email_comercial]
+    valores:
+      telefono_y_email: 1.00
+      solo_uno: 0.60
+      ninguno: 0.00
+    nunca_es_dimension_faltante: true
+    nota: >
+      La ausencia de teléfono y email es un HECHO conocido (no un dato sin
+      observar), por lo que contactabilidad siempre participa en el score
+      con un valor real (0.00, 0.60 o 1.00) — nunca cuenta como faltante.
+      Esto garantiza que score_base siempre tenga al menos 1 dimensión
+      disponible (peso mínimo 0.25) para todo el universo scoreado.
+
+  calidad_confianza:
+    peso: 0.0
+    entra_al_score: false
+    nota: >
+      Capa PARALELA e informativa (columna nivel_confianza_score), NO pondera
+      score_prioridad_comercial. Un negocio no es mejor prospecto simplemente
+      porque tenemos más datos o aparece en más fuentes — la Calidad describe
+      cuánto confiar en el score, no cuánto vale el prospecto.
+    campos_fuente_permitidos: [confianza_deduplicacion, campos_en_conflicto, flag_codigo_dane_ambiguo]
+    campos_fuente_explicitamente_prohibidos:
+      - activo_total
+      - numero_fuentes_consolidadas
+      - dominio_del_email
+      - geografia
+      - estado_matricula_no_normalizado
+    niveles: [Alta, Media, Baja]
+
+# --- Fórmula de agregación consciente de datos faltantes ---
+formula_cobertura:
+  score_base: "100 * Σ(peso_i * dimension_i, solo dimensiones DISPONIBLES) / Σ(peso_i de las dimensiones disponibles)"
+  factor_cobertura: "0.70 + 0.30 * (dimensiones_con_dato / 3)"
+  score_final: "score_prioridad_comercial = score_base * factor_cobertura"
+  dimensiones_que_cuentan_para_cobertura: [fit_comercial, escala_potencial, contactabilidad]
+  nota_calidad: "calidad_confianza NUNCA cuenta para dimensiones_con_dato ni para score_base."
+  nota_minimo_practico: >
+    Como contactabilidad nunca es faltante, dimensiones_con_dato >= 1 siempre
+    para el universo scoreado, por lo que factor_cobertura queda siempre en
+    [0.80, 1.00] en la práctica (0.70 solo sería matemáticamente posible con
+    0 dimensiones disponibles, caso que no ocurre por diseño).
+
+# --- Regla determinística de nivel_confianza_score (capa de Calidad) ---
+nivel_confianza_score:
+  descripcion: >
+    Etiqueta informativa de cuánto confiar en el score de una entidad,
+    derivada SOLO de señales de calidad de la deduplicación — nunca de
+    señales de negocio/tamaño/sector.
+  logica:
+    paso_1_nivel_base: >
+      confianza_deduplicacion == "alta"        -> base "Alta"
+      confianza_deduplicacion == "media_alta"  -> base "Media"
+      confianza_deduplicacion es NULL (entidad de fuente única, sin proceso
+        de consolidación multi-fuente) -> base "Media" (neutral: no se
+        castiga por no haber tenido que consolidarse, pero tampoco se premia
+        como si fuera una confirmación cruzada).
+    paso_2_defectos: >
+      defectos = 1 si campos_en_conflicto no está vacío (hubo conflicto de
+        valores entre fuentes al deduplicar) + 1 si flag_codigo_dane_ambiguo
+        es True. Rango: 0, 1 o 2.
+    paso_3_ajuste: >
+      defectos == 0 -> se mantiene el nivel base.
+      defectos == 1 -> se degrada un escalón (Alta->Media, Media->Baja).
+      defectos == 2 -> Baja, sin importar el nivel base.
+  aplica_solo_a: "estado_exclusion en {SIN_COINCIDENCIA, CANDIDATO_AMBIGUO} (mismo universo que el score)"
+
+# ============================================================================
+# ARCHIVO HISTÓRICO — versión borrador superada, solo trazabilidad.
+# ============================================================================
+variables_borrador_v1_superadas:
+  nota: >
+    Lista original de 9 variables candidatas sin pesos definidos. Reemplazada
+    por la estructura `dimensiones` tras revisión conceptual. Se conserva
+    por trazabilidad, no por vigencia.
+  variables:
+    - id: formalizacion_vigencia
+      nombre: "Formalización y vigencia del registro mercantil"
+      estado: "absorbida en escala_potencial.señal_vigencia"
+    - id: tamano_negocio
+      nombre: "Tamaño estimado del negocio"
+      estado: "absorbida en escala_potencial.señal_tamaño"
+    - id: encaje_sectorial
+      nombre: "Encaje del sector con el producto"
+      estado: "absorbida en fit_comercial"
+    - id: disponibilidad_contacto
+      nombre: "Disponibilidad de datos de contacto"
+      estado: "absorbida en contactabilidad"
+    - id: cobertura_geografica
+      nombre: "Alineación con zonas de cobertura comercial"
+      estado: "descartada — geografía explícitamente fuera del score"
+    - id: no_redundancia_pipeline
+      nombre: "No aparece ya en el pipeline interno"
+      estado: "absorbida como filtro de universo (estado_exclusion)"
+    - id: confiabilidad_dato
+      nombre: "Confiabilidad / completitud del registro"
+      estado: "absorbida en calidad_confianza (capa paralela, peso 0)"
+    - id: recencia_fuente
+      nombre: "Recencia del snapshot de origen"
+      estado: "descartada — sin campo de fecha consistente entre fuentes"
+    - id: corroboracion_multifuente
+      nombre: "Corroboración por múltiples fuentes independientes"
+      estado: "descartada del score — número de fuentes prohibido en Calidad"
+
+# Variables explícitamente EXCLUIDAS de V1 — requieren capacidades no autorizadas
+variables_futuras_no_incluidas_v1:
+  - id: presencia_digital
+    motivo_exclusion: "Requiere scraping/consulta web — no autorizado en esta fase."
+  - id: facturacion_estimada_externa
+    motivo_exclusion: "Requeriría fuente externa de estimación financiera no disponible."
+  - id: deteccion_competencia_pos
+    motivo_exclusion: "Requeriría enriquecimiento externo (ej. presencia de otro medio de pago)."
+
+# Taxonomía de confianza de dato aplicable a cualquier campo.
+niveles_confianza_dato:
+  confirmado: "Dato tomado directamente de fuente oficial (Cámara de Comercio, RNT, REPS) sin transformación que altere su significado."
+  externo: "Dato de fuente externa de menor autoridad/certeza (ej. listados sectoriales de terceros)."
+  inferido: "Dato calculado o deducido por el sistema (ej. sector mapeado desde CIIU, tamaño imputado)."
+  validado_manual: "Dato revisado y confirmado explícitamente por persona del equipo (ej. tras llamada/visita). Reserva para futuro feedback loop."
+
+# INSTRUCCIONES PARA USO REAL:
+# 1. Copiar a scoring_variables.yaml
+# 2. REUNIÓN con equipo comercial: revisar CADA peso, CADA sector_estrategico,
+#    CADA encaje_generico, CADA ordinal_tamano_empresa
+# 3. Validar contra muestra de datos: ¿el ranking resultante tiene sentido comercial?
+# 4. Ajustar hasta consenso. SOLO ENTONCES: pesos_definidos: true
+# 5. Documentar fecha_aprobacion y quién aprobó

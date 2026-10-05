@@ -1,0 +1,22 @@
+# Dependencias de SALES_INTELLIGENCE V1.
+#
+# NO INSTALADAS TODAVÍA — este archivo es una declaración para cuando se
+# apruebe pasar a la fase de ejecución (pip install -r requirements.txt).
+#
+# PyYAML ya está disponible en el entorno actual (6.0.1) y no aparece aquí
+# como pendiente, pero se deja fijada por completitud/reproducibilidad.
+
+PyYAML>=6.0
+
+# --- Requeridas para ejecutar el pipeline sobre datos reales ---
+pandas>=2.2            # manipulación tabular en todas las fases
+openpyxl>=3.1           # lectura/escritura de los 5 archivos XLSX de 01_BASES_RAW
+pyarrow>=15.0            # formato Parquet para las salidas intermedias (02_PROCESADAS)
+rapidfuzz>=3.6           # coincidencia difusa de razón social en deduplicación (dedup_registros.py)
+unidecode>=1.3           # normalización de texto consistente (alternativa/complemento a unicodedata)
+
+# --- Opcional, recomendado para el archivo nacional de 1.4GB / 6.26M filas ---
+duckdb>=0.10             # consultas SQL sobre el CSV nacional sin cargarlo completo en RAM
+
+# --- Solo para desarrollo (no se ejecuta en producción) ---
+pytest>=8.0               # correr 04_SISTEMA/tests/
