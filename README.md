@@ -3,7 +3,7 @@
 **Commercial Intelligence Pipeline for Fintech / Payments / B2B Sales**
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/release/python-312/)
-[![Tests Passing](https://img.shields.io/badge/Tests-50%2F50-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-84%2F84-brightgreen.svg)](tests/)
 [![No AI/ML](https://img.shields.io/badge/AI%2FML-None-orange.svg)](#no-ia--ml--verificado)
 [![Local-First](https://img.shields.io/badge/Architecture-Local--First-green.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -45,7 +45,7 @@ Un **pipeline de inteligencia comercial de 7 fases** que transforma bases fragme
 ```mermaid
 flowchart TD
     subgraph RAW["01_BASES_RAW - SOLO LECTURA"]
-        RAW1["50 fuentes\nCámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)\nDirectorios sectoriales (RNT, REPS, salud, ferreterías...)\n5 internas Bold (CRM + 4 HUBS)"]
+        RAW1["50 fuentes\nCámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)\nDirectorios sectoriales (RNT, REPS, salud, ferreterías...)\n5 fuentes internas (CRM interno + 4 HUBS comerciales)"]
         RAW2["~6.7M registros crudos\nIncluye maestro nacional 1.4GB / 6.26M filas\nFormatos: CSV, XLSX, codificaciones variables"]
     end
 
@@ -74,9 +74,9 @@ flowchart TD
     end
 
     subgraph EXCL["5. EXCLUSIÓN vs PIPELINE INTERNO - 02_PROCESADAS/05_exclusion/"]
-        EXCL1["CRM (42K leads) + 4 HUBS (Pereira)\nSOLO llaves mínimas: NIT/matrícula/razon_social/ciudad\nNUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
+        EXCL1["CRM interno (42K leads) + 4 HUBS comerciales (Pereira)\nSOLO llaves mínimas: NIT/matrícula/razon_social/ciudad\nNUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
         EXCL2["Jerarquía (falso negativo > falso positivo):\nALTA: NIT exacto -> 31,604\nMEDIA: matrícula+cámara compatible -> 88\nAMBIGUO: nombre/fuzzy -> 484 (nunca exclusión auto)"]
-        EXCL3["Matches documentados en matches_bold.parquet\ntipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
+        EXCL3["Matches documentados en matches_internal.parquet\ntipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
     end
 
     subgraph SCORE["6. SCORING - 02_PROCESADAS/06_scoring/"]
@@ -102,7 +102,7 @@ flowchart TD
     ENR --> EXCL
     EXCL --> SCORE
     SCORE --> DIV
-    DIV --> TOP
+DIV --> TOP["Top N priorizado\nListo para acción comercial\nExplicable · Auditable · Reproducible"]
 
     %% Estilos simplificados
     classDef raw fill:#fff3e0,stroke:#e65100,stroke-width:2px
@@ -118,8 +118,27 @@ flowchart TD
     class EXCL1,EXCL2,EXCL3 phase
     class SCORE1,SCORE2,SCORE3,SCORE4 phase
     class DIV1,DIV1b,DIV2,DIV3,DIV4 phase
+    class TOP exec
 
 ```
+
+---
+
+## 💼 Business Impact
+
+| Impacto comercial | Descripción |
+|-------------------|-------------|
+| **Universo comercial consolidado** | 6M+ registros fragmentados → **408,907 empresas únicas** listas para prospección |
+| **Protección del pipeline propio** | **31,604 cuentas** (NIT exacto) + 88 (matrícula+cámara) excluidas → **cero re-contacto** a pipeline propio |
+| **Priorización explicable** | **377,215 prospectos scoreados** con desglose variable a variable (Fit 40% / Escala 35% / Contacto 25%) — sin "caja negra" |
+| **Diversificación real** | **Top 100 diversificado** (M=22, taxonomía V2, desempate SHA-256) — equidad sectorial/geográfica |
+| **Lista accionable lista para llamar** | **Top 100 diversificado** listo para acción comercial inmediata |
+
+> **Nota:** Las métricas arriba reflejan el sistema original auditado en producción. La demo pública usa 1,000 entidades **SINTÉTICAS** generadas con el mismo motor (seed=42, reproducible).
+
+---
+
+## 🔑 Diferenciadores clave
 
 ## 🔑 Diferenciadores clave
 
@@ -217,10 +236,20 @@ Cada archivo `.template.yaml` en `config/` documenta la estructura completa. Par
 ./venv/bin/python tests/test_config.py
 # 7/7 tests passing: estructura config, mapeos, scoring, advertencias
 
-# Validaciones de scoring (31)
+# Validaciones de scoring automatizadas (31)
 ./venv/bin/python tests/test_score_prioridad_comercial.py
 # 31/31 tests passing: rango, pesos, no-imputación, geografía, cobertura, etc.
+
+# Tests funcionales de módulos (46)
+./venv/bin/python tests/test_cockpit.py
+./venv/bin/python tests/test_piloto_zernio.py
+./venv/bin/python tests/test_limpieza.py
+./venv/bin/python tests/test_enriquecimiento_legal.py
+./venv/bin/python tests/test_resiliencia_confecamaras.py
+# 46/46 tests passing: cockpit, piloto Zernio, limpieza, enriquecimiento legal, resiliencia
 ```
+
+**Total: 84/84 tests passing** (7 config + 31 scoring + 46 funcionales)
 
 ---
 

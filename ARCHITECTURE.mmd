@@ -5,8 +5,8 @@ flowchart TD
     %% Render: https://mermaid.live | GitHub | Notion | Obsidian
     %% ============================================================
 
-    subgraph RAW["01_BASES_RAW - SOLO LECTURA"]
-        RAW1["50 fuentes\nCámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)\nDirectorios sectoriales (RNT, REPS, salud, ferreterías...)\n5 internas Bold (CRM + 4 HUBS)"]
+subgraph RAW["01_BASES_RAW - SOLO LECTURA"]
+        RAW1["50 fuentes\nCámaras de Comercio (CCMMNA, CCP, Ibagué, Cúcuta, Armenia...)\nDirectorios sectoriales (RNT, REPS, salud, ferreterías...)\n5 internas (CRM interno + 4 HUBS comerciales)"]
         RAW2["~6.7M registros crudos\nIncluye maestro nacional 1.4GB / 6.26M filas\nFormatos: CSV, XLSX, codificaciones variables"]
     end
 
@@ -35,9 +35,9 @@ flowchart TD
     end
 
     subgraph EXCL["5. EXCLUSIÓN vs PIPELINE INTERNO - 02_PROCESADAS/05_exclusion/"]
-        EXCL1["CRM (42K leads) + 4 HUBS (Pereira)\nSOLO llaves mínimas: NIT/matrícula/razon_social/ciudad\nNUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
-        EXCL2["Jerarquía (falso negativo > falso positivo):\nALTA: NIT exacto -> 31,604\nMEDIA: matrícula + cámara compatible -> 88\nAMBIGUO: razón social exacta/fuzzy -> 484 (nunca exclusión auto)"]
-        EXCL3["Matches documentados en matches_bold.parquet\ntipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
+        EXCL1["CRM interno (42K leads) + 4 HUBS comerciales (Pereira)\nSOLO llaves mínimas: NIT/matrícula/razon_social/ciudad\nNUNCA PII: asesores, emails, teléfonos, direcciones, comentarios"]
+        EXCL2["Jerarquía (falso negativo > falso positivo):\nALTA: NIT exacto -> 31,604\nMEDIA: matrícula + cámara compatible -> 88\nAMBIGUO: nombre/fuzzy -> 484 (nunca exclusión auto)"]
+        EXCL3["Matches documentados en matches_internal.parquet\ntipo_antecedente_crm: cliente_convertido, lead_descartado, oportunidad_calificada..."]
     end
 
     subgraph SCORE["6. SCORING - 02_PROCESADAS/06_scoring/"]

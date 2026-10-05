@@ -14,7 +14,7 @@ Como profesional de **Business Development / B2B Sales en Fintech & Payments** (
 | Dolor | Impacto |
 |-------|---------|
 | Duplicados masivos | Misma empresa en 4-5 cámaras → llamadas repetidas, frustración |
-| Re-contactar pipeline propio | 31K+ cuentas ya en CRM/HUBS → molestia al cliente, pérdida de credibilidad |
+| Re-contactar pipeline propio | 31K+ cuentas ya en pipeline interno → molestia al cliente, pérdida de credibilidad |
 | Score "caja negra" | Herramientas genéricas no explican *por qué* un prospecto está arriba |
 | Sesgo geográfico/sectorial | Equipo solo llama a Bogotá/Medellín y HORECA → deja dinero en la mesa |
 | Datos sucios | NITs "0", matrículas placeholder, CIIUs sin letra, formatos de fecha inconsistentes |
@@ -44,7 +44,7 @@ Diseñé y construí **SALES_INTELLIGENCE V1**: un **pipeline local-first de 7 f
 [4] ENRIQUECIMIENTO → CIIU→Sector Vertical (taxonomía V2), Tamaño, Vigencia, Confianza
        │
        ▼
-[5] EXCLUSIÓN vs PIPELINE INTERNO → CRM + 4 HUBS solo como llaves mínimas (NIT/matrícula)
+[5] EXCLUSIÓN vs PIPELINE INTERNO → Pipeline interno solo como llaves mínimas (NIT/matrícula)
                     ALTA (NIT exacto): 31,604
                     MEDIA (matrícula+cámara): 88
                     AMBIGUO (nombre/fuzzy): 484 — **nunca exclusión automática**
@@ -73,10 +73,10 @@ TOP N LISTO PARA LLAMAR — Explicable, Auditable, Reproducible
 - **Evidencia**: `reporte_deduplicacion.md`, `ejecutar_deduplicacion.py`
 
 ### 3.2 Exclusión Jerárquica vs Pipeline Interno — Ética por diseño
-- **CRM (42K leads) + 4 HUBS (Pereira)** se leen **solo para extraer llaves mínimas** (NIT/matrícula/razón_social/ciudad) — **NUNCA se copian nombres de asesores, emails, teléfonos, direcciones, comentarios internos**
+- **Pipeline interno (42K leads) + 4 HUBS comerciales (Pereira)** se leen **solo para extraer llaves mínimas** (NIT/matrícula/razón_social/ciudad) — **NUNCA se copian nombres de asesores, emails, teléfonos, direcciones, comentarios internos**
 - **3 niveles**: ALTA (NIT exacto, 31,604) > MEDIA (matrícula+cámara compatible, 88) > AMBIGUO (razón social exacta/fuzzy, 484 — **nunca exclusión auto**)
 - **Principio**: "Ante duda, CANDIDATO_AMBIGUO, nunca EXCLUSION_*" — falso negativo preferido sobre falso positivo
-- **Evidencia**: `reporte_exclusion_bold.md`, `ejecutar_exclusion.py`
+- **Evidencia**: `reporte_exclusion_internal.md`, `ejecutar_exclusion.py`
 
 ### 3.3 Score de Prioridad Comercial — Explicable, no "IA"
 - **3 dimensiones ponderadas (suman 1.00)**: Fit Comercial 40% | Escala/Potencial 35% | Contactabilidad 25%
@@ -113,9 +113,9 @@ TOP N LISTO PARA LLAMAR — Explicable, Auditable, Reproducible
 | Consolidados matrícula+cámara | 1,169 grupos (2,354 regs) | `reporte_deduplicacion.md` |
 | Candidatos razon_social+municipio | 31,476 grupos (63,036 regs) | `reporte_deduplicacion.md` |
 | Candidatos fuzzy | 5,788 grupos (12,500 regs) | `reporte_deduplicacion.md` |
-| Exclusión ALTA (NIT exacto CRM/HUBS) | **31,604** | `reporte_exclusion_bold.md` |
-| Exclusión MEDIA (matrícula+cámara) | **88** | `reporte_exclusion_bold.md` |
-| Candidatos ambiguos (nunca exclusión auto) | **484** | `reporte_exclusion_bold.md` |
+| Exclusión ALTA (NIT exacto) | **31,604** | `reporte_exclusion_internal.md` |
+| Exclusión MEDIA (matrícula+cámara) | **88** | `reporte_exclusion_internal.md` |
+| Candidatos ambiguos (nunca exclusión auto) | **484** | `reporte_exclusion_internal.md` |
 | Universo scoreable | 377,215 | `reporte_score_prioridad_comercial.md` |
 | Score range validado | 0–99.75 | `test_score_prioridad_comercial.py` |
 | Factor_cobertura observado | {0.80, 0.90, 1.00} | `reporte_score_prioridad_comercial.md` |
@@ -234,7 +234,7 @@ python pipeline.py reportar --top 10 --sector "Gastronomía y Hotelería"
 | Componente | Tipo real | Por qué NO es IA/ML |
 |------------|-----------|---------------------|
 | Deduplicación | Union-Find + reglas deterministas | RapidFuzz = string matching algorítmico, no ML |
-| Exclusión vs CRM | Matching exacto NIT/matrícula + fuzzy determinista | Ningún clasificador entrenado |
+| Exclusión vs pipeline interno | Matching exacto NIT/matrícula + fuzzy determinista | Ningún clasificador entrenado |
 | Mapeo CIIU→Sector | Lookup table YAML (sección + excepciones) | Tabla de decisión, no modelo |
 | Scoring | Fórmula aritmética vectorizada (pesos YAML) | Reglas → código, cero entrenamiento |
 | Calidad/Confianza | Reglas if/else sobre deduplicación | Peso 0, nunca aprende |
@@ -251,6 +251,6 @@ python pipeline.py reportar --top 10 --sector "Gastronomía y Hotelería"
 Business Development | B2B Sales | Fintech & Payments | Commercial Intelligence
 
 - LinkedIn: [linkedin.com/in/jhonfredyholguin](https://linkedin.com/in/jhonfredyholguin)
-- Portfolio: [github.com/jhonfredy/bold-sales-intelligence-public](https://github.com/jhonfredy/bold-sales-intelligence-public)
+- Portfolio: [github.com/jhonfredy/sales-intelligence-system](https://github.com/freddih13-arch/sales-intelligence-system)
 
 > *Disponible para conversaciones sobre Business Development, Sales Operations, Commercial Intelligence en Fintech/Payments.*
